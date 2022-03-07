@@ -2,7 +2,6 @@
 # Table of Contents
 - [Introduction](#introduction)
 - [Methodology](#methodology)
-    - [Prior Work](#prior-work)
     - [The Data](#the-data)
     - [Definition of an Anomaly](#definition-of-an-anomaly)
     - [EDA & Feature Engineering](#eda-&-feature-engineering)
@@ -15,12 +14,16 @@
     - [Improvements](#improvements)
 - [References](#references)
 - [Appendix](#appendix)
+
+
 # Introduction
 <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Viasat Inc. is an American communications company that provides high-speed satellite broadband services and secure networking systems covering military and commercial markets. Therefore, ensuring high quality network performance is crucial for maintaining customer satisfaction. Fundamental factors that affect network performance are packet loss and latency. </p>
 <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Small units of data that are sent and recieved across a network are called packets, and packet loss occurs when one or more of these packets fails to reach its intended destination. Latency is the delay between a user's action and a web application's response to that action. High quantities of each of these often results in slow service and network disruptions for the user.</p> 
 <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; The problem we are trying to explore is: can we detect anomalies within network traffic, whether it be an increase in the packet loss rate, larger latency, or both? Packet loss can be caused by a number of issues, including: network congestion, problems with network hardware, software bugs and security threats. On the other hand, main factors that affect network latency are: the transmission medium (copper cable-based networks vs. modern optic fibers), propagation (how far apart the networks are), efficiency of routers and storage delays. </p>
 <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; The ability to detect anomalies on a data stream would be extremely useful as it can be an effective monitoring & alerting system for poor network conditions. If an anomaly is predicted, our hope is that a proper recovery protocol can be put in place to stabilize network performance, creating a better experience for the end user.</p> 
+
 # Methodology
+
 ### The Data
 
 We will be using data generated from DANE (Data Automation and Network Emulation Tool), a tool that automatically collects network traffic datasets in a parallelized manner without background noise, and emulates a diverse range of network conditions representative of the real world. Using DANE, we are able to configure parameters such as latency and the packet loss ratio ourselves. More importantly, we are able to simulate an anomaly by changing the configuration settings of the packet loss rate and latency mid run. The data collected is already aggregated per second with these fields:
@@ -41,9 +44,13 @@ We will be using data generated from DANE (Data Automation and Network Emulation
 
 <br>
 <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  We ran only two scenarios at once to prevent overloading our CPU by running too many DANE scenarios concurrently. Each DANE run is 5 minutes long.  The configuration change happens at the 180 second mark and what we configure for our packet loss rate determines the likelihood of each packet being dropped. This way, we are able to simulate an anomaly within our data and are able to simulate packet loss in a more realistic manner. Our steady state had a packet loss ratio of 1/5,000 and a latency of 40 ms. We are focused on identifying changes of a factor of 4 and above. In our case a packet loss ratio of 1/1,250  and a latency of 160 ms or greater or a packet loss ratio of 1/20,000 and latency of 10 ms. </p>
+
 ### Definition of an Anomaly
+
 <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; The type of behavior we are looking for is different from what a conventional anomaly would behave like. Typical anomalies are characterized by significantly large spikes or drops in a feature. The behavior we are looking for is more closely related to anomalous regions where the degradation in the network continues; these anomalies resemble shifts. As we will show in the next section, spikes in our features that would normally resemble anomalous behavior are perfectly random and not caused by any change in network quality. These anomalies would be considered false positives if detected.</p>
+
 ### EDA & Feature Engineering
+
 ![](EDA.png?raw=true)
 <br>
 **Figure 1** The packets per second sent from machine 1 → 2 with conditions of 50 ms latency and 1/2500 packets expected to be dropped with the conditions shifting to 300 ms latency and 1/1250 expected packet drops at 180 seconds.
@@ -51,7 +58,7 @@ We will be using data generated from DANE (Data Automation and Network Emulation
     
 **Exploring Packets Per Second Feature**
 
-|First 180 Seconds| Last 120 Seconds|
+| |First 180 Seconds| Last 120 Seconds|
 |-|----------------|-----------------|
 |Mean|1783.72|428.43|
 |Standard Deviation|710.10|260.22|
@@ -59,6 +66,7 @@ We will be using data generated from DANE (Data Automation and Network Emulation
 |Min|680|152|
 
 ### Exploration of Anomaly Detection Methods
+
 **I.** Forecasting
 <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Since we are dealing with time series data, we can create an anomaly detection model through the use of forecasting techniques. The basic concept is that we will pick a feature, in this case total packets sent per second (volume of traffic) and build a forecast. If the expected value is outside of our prediction interval (threshold) we will flag it as an anomaly. We are employing a multivariate time series forecast because we are using predictors other than the series (a.k.a exogenous variables).</p>
 <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; We will be focusing on building an ARIMA (Auto Regressive Integrated Moving Average) model. This model is actually a class of models that ‘explains’ a given time series based on its own past values, that is, its own lags and the lagged forecast errors, so that equation can be used to forecast future values.</p> 
@@ -95,7 +103,9 @@ An ARIMA model is one where the time series was differenced at least once to mak
 **II.** MAD & Median
 
 # Results
+
 ### Performance Measures
+
 We chose to use **F1 score** as our metric but also considered **precision** in our metrics. Our motivation behind choosing F1 score and precision is because anomalous regions cause by network degradation are assumed to be rare. Since the intended use for this ensemble model is to alert ISP employees what connections are degraded if too many false positives are being flagged then there would not be much use in the alarm.
 <br/><br/>
 <p> Our goal is to have the users trust that if there is an alarm they can be sure that there is network degradation, hence why precision is considered. We also do not want our model to always predict negative, making it trivial so F1 score was included. </p>
@@ -109,9 +119,13 @@ We chose to use **F1 score** as our metric but also considered **precision** in 
 ![](ensemble-performance.png?raw=true) 
 <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Our method to combine our ARIMA and MAD model followed a simple logic. We ran both models independently and compared the results of each model. We used an AND operator to see where both models detected an anomaly and labeled it as an anomaly. Otherwise, if the condition is not met, then we do not label it as an anomaly. </p>
 <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Using the ensemble logic described above, our results show that we are able to detect anomalies early on when they occur. However, we have one false negative where no anomaly appears due to the fact that our ARIMA model detects the anomalies early on but the MAD model detects the anomalies later, so there is no overlap for our ensemble logic to agree on an anomaly. </p>
+
 # Future Work
+
 ### Bigger Questions
+
 ### Improvements
+
 <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; A major portion of work that our group was not able to venture into was to generate a more realistic dataset to test our model on. Our methodology of concatenating multiple runs of DANE to “simulate” about an hour and a half of network traffic is not exactly accurate because we do not know if networks jump back to a steady state as quickly and abruptly as shown in our dataset. Also, we were only able to train and test our model on one configuration for our steady state which was a network with a latency of 40 ms and a packet loss ratio of 1/5000. It would have definitely been interesting to see how our model would perform on a test set with a new steady state so we can further hypertune our model. For example, the ARIMA model only uses “total packets” as its feature and we know from our results from last quarter that different latency and packet loss ratios results in different behavior for total packets sent over the network. Therefore, the parameters for our ARIMA model would most likely change if our steady state changes.</p>
 <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; As we have it right now, our ARIMA model is only trained on one configuration so an addition we would have to make is to continuously or periodically retrain the ARIMA model to make sure that it is correctly hypertuned. Moreover, our ensemble logic was very naive and rough and it would’ve been extremely useful to flush our ensemble model out even further. As we currently have it, our MAD model is hypertuned to have a window size of 80 seconds while our ARIMA model is hypertuned to take in inputs of 20 seconds. The different inputs of each model may need the development of different data pre-processors for each. </p>
 
