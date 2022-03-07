@@ -13,7 +13,6 @@
     - [Bigger Questions](#bigger-questions)
     - [Improvements](#improvements)
 - [References](#references)
-- [Appendix](#appendix)
 
 
 # Introduction
@@ -166,4 +165,3 @@ We chose to use **F1 score** as our metric but also considered **precision** in 
 - https://people.duke.edu/~rnau/411arim.htm
 - https://coolstatsblog.com/2013/08/14/using-aic-to-test-arima-models-2/
 
-# Appendix
