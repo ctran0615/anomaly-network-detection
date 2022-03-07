@@ -87,9 +87,9 @@ An ARIMA model is one where the time series was differenced at least once to mak
 
 <p>We then ran the model on our test set concatenated to our train data. We can see in figure 4 that there were 2 instances of false negatives where our model did not flag the configuration change as an anomaly. There was also a large spike in the middle of our steady state traffic which was flagged as anomalous, representing one case of a false positive. This window of traffic just so happened to have an extremely large volume of packets sent and was not due to a configuration change. </p>
 
-![](test-og.png?raw=true)!
+![](test-og.png?raw=true)
 **Figure 4**  ARIMA model anomaly detections using a 99% CI on the test set. The conditions generating the data: 40ms latency and 1/5000 packets dropped shifting to 320ms latency and 1/1250 packets being dropped. Time is measured in units of 20s since the ARIMA model trains on 20s aggregations of packets per second as a single data point. 
-[](test-log-scaled.png?raw=true)
+![](test-log-scaled.png?raw=true)
 **Figure 5** ARIMA model anomaly detections using a 99% CI on the test set with a log scale and forecast predictions. 
 
 **II.** MAD & Median
@@ -112,6 +112,9 @@ We chose to use **F1 score** as our metric but also considered **precision** in 
 # Future Work
 ### Bigger Questions
 ### Improvements
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; A major portion of work that our group was not able to venture into was to generate a more realistic dataset to test our model on. Our methodology of concatenating multiple runs of DANE to “simulate” about an hour and a half of network traffic is not exactly accurate because we do not know if networks jump back to a steady state as quickly and abruptly as shown in our dataset. Also, we were only able to train and test our model on one configuration for our steady state which was a network with a latency of 40 ms and a packet loss ratio of 1/5000. It would have definitely been interesting to see how our model would perform on a test set with a new steady state so we can further hypertune our model. For example, the ARIMA model only uses “total packets” as its feature and we know from our results from last quarter that different latency and packet loss ratios results in different behavior for total packets sent over the network. Therefore, the parameters for our ARIMA model would most likely change if our steady state changes. 
+    As we have it right now, our ARIMA model is only trained on one configuration so an addition we would have to make is to continuously or periodically retrain the ARIMA model to make sure that it is correctly hypertuned. Moreover, our ensemble logic was very naive and rough and it would’ve been extremely useful to flush our ensemble model out even further. As we currently have it, our MAD model is hypertuned to have a window size of 80 seconds while our ARIMA model is hypertuned to take in inputs of 20 seconds. The different inputs of each model may need the development of different data pre-processors for each. </p>
+
 # References
 - https://towardsdatascience.com/outlier-detection-with-isolation-forest-3d190448d45e
 - https://towardsdatascience.com/anomaly-detection-with-isolation-forest-visualization-23cd75c281e2
