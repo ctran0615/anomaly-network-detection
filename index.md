@@ -105,11 +105,19 @@ An ARIMA model is one where the time series was differenced at least once to mak
 
 <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The Median Absolute Deviation based model tries to take advantage of the differences in the features of spikes and shifts in a time series. Median and median absolute deviation are transformations to the 1 → 2 packets per second data using a rolling window. Some properties of this transformation: smoothens out the data, depending on the window size median and MAD is robust against spikes, is sensitive to shifts in the data. Median and MAD depend on the assumption that spikes are relatively short and uncommon, and shifts are persistent. When a spike occurs the median would remain almost unchanged since the data points outside the spike would make up more than 50% of the window same applies to deviation from the median, hence why larger window sizes tend to do better. Shifts in the data on the other hand eventually result in a shift in the median since they persist much longer than 50% of the rolling window size.</p>
     
+![](median.png?raw=true)
 
-<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The model determines if a data point is an anomaly if a transformation of the median and MAD are above a threshold based on the window size. Deviation from the median was included in the transformation to limit the effect of large variance in the window. If there is a lot of variance but no shift, the data would be above and below the median so the sum of the deviations would be low in magnitude but in a shift the data would be either strictly above or below the median and result in a high magnitude. All of these transformations that picked at differences between spikes, shifts and data with high variance in a window would be combined to make the presence of a shift more apparent. The transformation used was:
-Transformation(window) =MAD(window) *DM(window)median(window)  
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The model determines if a data point is an anomaly if a transformation of the median and MAD are above a threshold based on the window size. Deviation from the median was included in the transformation to limit the effect of large variance in the window. If there is a lot of variance but no shift, the data would be above and below the median so the sum of the deviations would be low in magnitude but in a shift the data would be either strictly above or below the median and result in a high magnitude. All of these transformations that picked at differences between spikes, shifts and data with high variance in a window would be combined to make the presence of a shift more apparent. The transformation used was:</p>
+
+![](transformation.png?raw=true)    
+
+<p>    
 Where MAD is median absolute deviation and DM is the sum of the deviation from the median
 </p>
+
+![](anomaly_transform.png?raw=true)
+
+![](anomaly.png?raw=true)
 
 <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Since the model uses a rolling window to determine the anomaly the detection is delayed by a function of the window size. Shifting the detection by half the window size lines up the alerts with the shift.</p>
 
