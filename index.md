@@ -4,7 +4,7 @@
 - [Methodology](#methodology)
     - [The Data](#the-data)
     - [Definition of an Anomaly](#definition-of-an-anomaly)
-    - [EDA & Feature Engineering](#eda-&-feature-engineering)
+    - [EDA and Feature Engineering](#eda-and-feature-engineering)
     - [Anomaly Detection Methods and Models](#exploration-of-anomaly-detection-methods)
 - [Results](#results)
     - [Performance Measures](#performance-measures)
@@ -49,7 +49,7 @@ We will be using data generated from DANE (Data Automation and Network Emulation
 
 <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; The type of behavior we are looking for is different from what a conventional anomaly would behave like. Typical anomalies are characterized by significantly large spikes or drops in a feature. The behavior we are looking for is more closely related to anomalous regions where the degradation in the network continues; these anomalies resemble shifts. As we will show in the next section, spikes in our features that would normally resemble anomalous behavior are perfectly random and not caused by any change in network quality. These anomalies would be considered false positives if detected.</p>
 
-### EDA & Feature Engineering
+### EDA and Feature Engineering
 
 ![](EDA.png?raw=true)
 <br>
