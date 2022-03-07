@@ -106,8 +106,9 @@ An ARIMA model is one where the time series was differenced at least once to mak
 <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The Median Absolute Deviation based model tries to take advantage of the differences in the features of spikes and shifts in a time series. Median and median absolute deviation are transformations to the 1 → 2 packets per second data using a rolling window. Some properties of this transformation: smoothens out the data, depending on the window size median and MAD is robust against spikes, is sensitive to shifts in the data. Median and MAD depend on the assumption that spikes are relatively short and uncommon, and shifts are persistent. When a spike occurs the median would remain almost unchanged since the data points outside the spike would make up more than 50% of the window same applies to deviation from the median, hence why larger window sizes tend to do better. Shifts in the data on the other hand eventually result in a shift in the median since they persist much longer than 50% of the rolling window size.</p>
     
 ![](median.png?raw=true)
+**Figure 6** Median applied on a rolling window with a window size of 80 seconds. The median at a given time is the median of the previous 80 seconds of data. The red line represents the time the shift in packet loss and latency happens.
 
-<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The model determines if a data point is an anomaly if a transformation of the median and MAD are above a threshold based on the window size. Deviation from the median was included in the transformation to limit the effect of large variance in the window. If there is a lot of variance but no shift, the data would be above and below the median so the sum of the deviations would be low in magnitude but in a shift the data would be either strictly above or below the median and result in a high magnitude. All of these transformations that picked at differences between spikes, shifts and data with high variance in a window would be combined to make the presence of a shift more apparent. The transformation used was:</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The model determines if a data point is an anomaly if a transformation of the median and MAD are above a threshold based on the window size. The threshold is determined by 100/window size. Deviation from the median was included in the transformation to limit the effect of large variance in the window. If there is a lot of variance but no shift, the data would be above and below the median so the sum of the deviations would be low in magnitude but in a shift the data would be either strictly above or below the median and result in a high magnitude. All of these transformations that picked at differences between spikes, shifts and data with high variance in a window would be combined to make the presence of a shift more apparent. The transformation used was:</p>
 
 ![](transformation.png?raw=true)    
 
@@ -115,9 +116,15 @@ An ARIMA model is one where the time series was differenced at least once to mak
 Where MAD is median absolute deviation and DM is the sum of the deviation from the median
 </p>
 
+<p>
+The MAD model takes in the 1 --> 2 packets per second data output by DANE and applies the transformation above on a given window size. As we can see with the transformation the spikes in the beginning of the run get flattened out while the shift beomes a spike in the transformation and easy to detect.
+</p>
+
 ![](anomaly_transform.png?raw=true)
+**Figure 7** Transformation of the 80 second rolling window on the data in figure 6. The purple line is the threshold used to determine an anomaly, it is 100/window size. The anomaly gets detected at ~220 seconds.
 
 ![](anomaly.png?raw=true)
+**Figure 8** Shifting the time the anomaly was detected on the transformation by half of the window size (40 seconds) we can observe the spike in the transformation corresponds to the shift in the 1 --> 2 packets per second data.
 
 <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Since the model uses a rolling window to determine the anomaly the detection is delayed by a function of the window size. Shifting the detection by half the window size lines up the alerts with the shift.</p>
 
